@@ -1,0 +1,364 @@
+<!-- Build NarrowExchangeRates. It is also used by Hudson NarrowExchangeRates project. JUnit test is available for this build. -->
+<project basedir="." default="build_jar_all_NarrowExchangeRates" name="BUILD_NarrowExchangeRates">
+	<description>
+	    Build NarrowExchangeRates. 
+	    JUnit test is available for this build.
+	    $Id: build_NarrowExchangeRates.xml $
+	</description>
+
+	<!-- set global properties for this build -->
+	<property name="versionNarrowExchangeRates" value="0.0.1" />
+	<property name="srcNarrowExchangeRates" location="src" />
+	<property name="docNarrowExchangeRates" location="doc" />
+	<property name="buildNarrowExchangeRates" location="build" />
+	<property name="libNarrowExchangeRates" location="lib" />
+	<property name="release_dir" value="release" />
+	<property name="distNarrowExchangeRates" location="${buildNarrowExchangeRates}/dist" />
+	<property name="beast2path" location="../beast2"/>
+	<property name="libBeast2" location="${beast2path}/lib" />
+	<property name="srcBeast2" location="${beast2path}/src" />
+	<property name="beast2classpath" location="${beast2path}/build" />
+	<property name="Add_on_dir" value="${release_dir}/add-on" />
+
+    <import file="${beast2path}/build.xml" />
+
+	<property name="main_class_CladeAge" value="beast.app.ca.NarrowExchangeRatesPanel" />
+	<property name="report" value="${buildNarrowExchangeRates}/junitreport"/>
+
+	<path id="classpath">
+        <pathelement path="${buildNarrowExchangeRates}"/>
+		<fileset dir="${libBeast2}" includes="junit-4.8.2.jar"/>
+		<fileset dir="${libBeast2}" includes="jam.jar"/>
+		<fileset dir="${libBeast2}" includes="commons-math3-3.1.1.jar"/>
+	<pathelement path="${beast2classpath}"/>
+		<fileset dir="${beast2path}/lib" includes="jam.jar"/>
+		<fileset dir="${beast2path}/lib" includes="beagle.jar"/>
+		<fileset dir="${beast2path}/lib" includes="fest.jar"/>
+		<fileset dir="${beast2path}/lib" includes="colt.jar"/>
+	<pathelement path="../FastRelaxedClockLogNormal/build"/>
+	<pathelement path="../BEASTLabs/build"/>
+	</path>
+
+
+
+
+	<!-- start -->
+	<target name="initNarrowExchangeRates">
+		<echo message="${ant.project.name}: ${ant.file}" />
+	</target>
+
+	<target name="cleanNarrowExchangeRates">
+    	<delete dir="${buildNarrowExchangeRates}" />
+	</target>
+
+	<!-- clean previous build, and then compile Java source code, and Juint test -->
+	<target name="build_all_NarrowExchangeRates" depends="cleanNarrowExchangeRates,compile-allNarrowExchangeRates,junitNarrowExchangeRates"
+        description="Clean and Build all run-time stuff">
+	</target>
+
+	<!-- clean previous build, compile Java source code, and Junit test, and make the beast.jar and beauti.jar -->
+	<target name="build_jar_all_NarrowExchangeRates" depends="cleanNarrowExchangeRates,compile-allNarrowExchangeRates,junitNarrowExchangeRates,dist_all_NarrowExchangeRates"
+        description="Clean and Build all run-time stuff">
+	</target>
+
+
+	<!-- No JUnit Test, clean previous build, compile Java source code, and make the NarrowExchangeRates.jar and beauti.jar -->
+	<target name="build_jar_all_NarrowExchangeRates_NoJUnitTest" depends="cleanNarrowExchangeRates,compile-allNarrowExchangeRates,dist_all_NarrowExchangeRates"
+        description="Clean and Build all run-time stuff">
+	</target>
+
+	<!-- compile Java source code -->
+	<target name="compile-allNarrowExchangeRates" depends="initNarrowExchangeRates,compile-all">
+
+
+	    <!-- Capture the path as a delimited property using the refid attribute -->
+	    <property name="myclasspath" refid="classpath"/>
+	    <!-- Emit the property to the ant console -->
+	    <echo message="Classpath = ${myclasspath}"/>
+
+		<mkdir dir="${buildNarrowExchangeRates}" />
+
+		<!-- Compile the java code from ${srcNarrowExchangeRates} into ${buildNarrowExchangeRates} /bin -->
+		<javac srcdir="${srcNarrowExchangeRates}" destdir="${buildNarrowExchangeRates}" classpathref="classpath" 
+		       fork="true"
+		       memoryinitialsize="256m"
+		       memorymaximumsize="256m"
+			   source="1.8"
+		       target="1.8">
+			<include name="**/**" />
+			<!-- compile JUnit test classes -->
+			<include name="test/beast/**" />
+		</javac>
+		<copy todir="${buildNarrowExchangeRates}">
+			<fileset dir="${srcNarrowExchangeRates}" includes="**/*.png" />
+		</copy>
+		<echo message="Successfully compiled." />
+	</target>
+
+	<!-- make the beast.jar and beauti.jar -->
+	<target name="dist_all_NarrowExchangeRates" depends="compile-allNarrowExchangeRates" description="create NarrowExchangeRates jar">
+		<!-- Create the distribution directory -->
+		<mkdir dir="${distNarrowExchangeRates}" />
+
+		<!-- Put everything in ${buildNarrowExchangeRates} into the beast.jar file -->
+		<jar jarfile="${distNarrowExchangeRates}/NarrowExchangeRates.jar">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Main-Class" value="${main_class_CladeAge}" />
+			</manifest>
+			<fileset dir="${buildNarrowExchangeRates}">
+				<include name="**/*.class" />
+				<include name="**/*.png" />
+			</fileset>
+			<fileset dir="${beast2classpath}">
+				<include name="**/*.class" />
+				<include name="**/*.properties" />
+				<include name="**/*.png" />
+			</fileset>
+			<zipgroupfileset dir="${libBeast2}" includes="jam.jar" />
+			<zipgroupfileset dir="${libBeast2}" includes="beagle.jar" />
+			<zipgroupfileset dir="${libBeast2}" includes="colt.jar" />
+			<zipgroupfileset dir="${libBeast2}" includes="commons-math3-3.1.1.jar" />
+			<zipgroupfileset dir="${libBeast2}" includes="antlr-runtime-4.7.jar" />
+		</jar>
+		<jar jarfile="${distNarrowExchangeRates}/NarrowExchangeRates.src.jar">
+			<fileset dir="${srcNarrowExchangeRates}">
+				<include name="**/*.java" />
+				<include name="**/*.png" />
+				<include name="**/*.xsl" />
+			</fileset>
+        </jar>
+		<jar jarfile="${distNarrowExchangeRates}/NarrowExchangeRates.addon.jar">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+			</manifest>
+			<fileset dir="${buildNarrowExchangeRates}">
+				<include name="**/*.png" />
+				<include name="**/*.class" />
+				<include name="**/*.class" />
+				<include name="**/*.properties" />
+			</fileset>
+		</jar>
+	</target>
+
+	<!-- run beast.jar -->
+	<target name="run_NarrowExchangeRates">
+		<java jar="${distNarrowExchangeRates}/NarrowExchangeRates.jar" fork="true" />
+	</target>
+
+	
+	<!-- JUnit test -->
+	<target name="junitNarrowExchangeRates">
+		<mkdir dir="${report}" />
+		<junit printsummary="yes"> <!--showoutput='yes'-->
+			<classpath>
+				<path refid="classpath" />
+				<path location="${buildNarrowExchangeRates}" />
+			</classpath>
+
+			<formatter type="xml" />
+
+			<batchtest fork="yes" todir="${report}">
+				<fileset dir="${srcNarrowExchangeRates}">
+                    <include name="test/**/*Test.java"/>                                         
+				</fileset>
+				<fileset dir="${srcBeast2}">
+                    <include name="test/beast/integration/**/*Test.java"/>                                         
+                    <exclude name="test/beast/integration/**/ResumeTest.java"/>                                         
+				</fileset>
+			</batchtest>
+		</junit>
+		<echo message="JUnit test finished." />
+	</target>
+    
+    <target name="junitreport">
+		<junitreport todir="${report}">
+			<fileset dir="${report}" includes="*.xml"/>
+			<report format="frames" todir="${report}"/>
+		</junitreport>
+		<echo message="JUnit test report finished." />
+	</target>
+
+
+	<target name="addon"
+	        depends="build_jar_all_NarrowExchangeRates_NoJUnitTest"
+	        description="release BEAST 2 add-on version of NarrowExchangeRates">
+
+		<delete dir="${Add_on_dir}" />
+		<!-- Create the release directory -->
+		<mkdir dir="${Add_on_dir}" />
+		<mkdir dir="${Add_on_dir}/lib" />
+		<mkdir dir="${Add_on_dir}/doc" />
+		<mkdir dir="${Add_on_dir}/examples" />
+		<mkdir dir="${Add_on_dir}/templates" />
+
+		<copy todir="${Add_on_dir}">
+			<fileset file="version.xml"/>
+		</copy>
+		<!--
+		<copy todir="${Add_on_dir}/examples">
+			<fileset dir="examples" />
+		</copy>
+		-->
+		<copy todir="${Add_on_dir}/doc">
+			<fileset dir="doc" includes="NarrowExchangeRates.pdf"/>
+		</copy>
+		<copy todir="${Add_on_dir}/lib">
+			<fileset dir="${distNarrowExchangeRates}" includes="NarrowExchangeRates.addon.jar" />
+		</copy>
+		<copy todir="${Add_on_dir}">
+			<fileset dir="${distNarrowExchangeRates}" includes="NarrowExchangeRates.src.jar" />
+		</copy>
+		
+		<!--
+		<copy todir="${Add_on_dir}/templates">
+			<fileset file="templates/FossilCalibration.xml" />
+		</copy>
+		-->
+		
+		<jar jarfile="${distNarrowExchangeRates}/NarrowExchangeRates.addon.v${versionNarrowExchangeRates}.zip">
+			<fileset dir="${Add_on_dir}">
+				<include name="**/*" />
+			</fileset>
+        </jar>
+		<echo message="Add-on version v${versionNarrowExchangeRates} release is finished." />
+	</target>
+
+
+
+
+
+	<!-- Release -->
+	<property name="version" value="1.0.0" />
+	<property name="version_number" value="${versionNarrowExchangeRates}" />
+	<property name="release_dirNarrowExchangeRates" value="release" />
+	<property name="copyright" value="CladeAge development team 2013" />
+
+	<property name="CladeAge_name" value="CladeAge" />
+
+	<property name="common_dirNarrowExchangeRates" value="${release_dirNarrowExchangeRates}/common" />
+	<property name="Mac_dirNarrowExchangeRates" value="${release_dirNarrowExchangeRates}/Mac" />
+	<property name="Linux_dirNarrowExchangeRates" value="${release_dirNarrowExchangeRates}/Linux" />
+	<property name="Windows_dirNarrowExchangeRates" value="${release_dirNarrowExchangeRates}/Windows" />
+
+	<property name="Mac_package_dirNarrowExchangeRates" value="${Mac_dirNarrowExchangeRates}/${CladeAge_name}" />
+	<property name="Linux_package_dirNarrowExchangeRates" value="${Linux_dirNarrowExchangeRates}/${CladeAge_name}" />
+	<property name="Windows_package_dirNarrowExchangeRates" value="${Windows_dirNarrowExchangeRates}/${CladeAge_name}" />
+
+	<!-- Need to either install Launch4j under {CladeAge workspace}/${release}
+                 or install it in the default directory and change the location of launch4j.dir -->
+	<target name="windows"
+	        depends="build_jar_all_NarrowExchangeRates_NoJUnitTest"
+	        description="release Windows version of CladeAge">
+
+		<delete dir="${Windows_package_dirNarrowExchangeRates}" />
+		<!-- Create the release directory -->
+		<mkdir dir="${Windows_package_dirNarrowExchangeRates}" />
+
+		<property name="launch4j.dir" location="../../launch4j" />
+		<taskdef name="launch4j"
+		         classname="net.sf.launch4j.ant.Launch4jTask"
+		         classpath="${launch4j.dir}/launch4j.jar :${launch4j.dir}/lib/xstream.jar" />
+
+		<copy file="${distNarrowExchangeRates}/NarrowExchangeRates.src.jar" todir="${Windows_package_dirNarrowExchangeRates}/lib" />
+		<copy file="${common_dirNarrowExchangeRates}/VERSION HISTORY.txt" todir="${Windows_package_dirNarrowExchangeRates}" />
+		<copy file="${common_dirNarrowExchangeRates}/README.txt" todir="${Windows_package_dirNarrowExchangeRates}" />
+		<copy file="${common_dirNarrowExchangeRates}/LICENSE.txt" todir="${Windows_package_dirNarrowExchangeRates}" />
+
+		<!-- CladeAge v?.?.?.exe -->
+		<launch4j configFile="${Windows_dirNarrowExchangeRates}/CladeAge_launch4j.xml"
+		          jar="${distNarrowExchangeRates}/NarrowExchangeRates.jar"
+		          outfile="${Windows_package_dirNarrowExchangeRates}/${CladeAge_name}.exe"
+		          fileVersion="${version_number}.0"
+		          txtFileVersion="${versionNarrowExchangeRates}"
+		          productVersion="${version_number}.0"
+		          txtProductVersion="${versionNarrowExchangeRates}" />
+
+		<copy todir="${Windows_package_dirNarrowExchangeRates}/templates/">
+			<fileset dir="templates/" />
+		</copy>
+
+		<zip destfile="${Windows_dirNarrowExchangeRates}/${CladeAge_name} v${versionNarrowExchangeRates}.zip">
+			<zipfileset dir="${Windows_package_dirNarrowExchangeRates}" prefix="${CladeAge_name}" />
+		</zip>
+
+		<echo message="Windows version release is finished." />
+	</target>
+
+	<target name="linux"
+	        depends="build_jar_all_NarrowExchangeRates_NoJUnitTest"
+	        description="release Linux/Unix version of CladeAge">
+		<delete dir="${Linux_package_dirNarrowExchangeRates}" />
+		<!-- Create the release directory -->
+		<mkdir dir="${Linux_package_dirNarrowExchangeRates}" />
+
+		<copy todir="${Linux_package_dirNarrowExchangeRates}/bin">
+			<fileset dir="${Linux_dirNarrowExchangeRates}/bin" />
+		</copy>
+		<chmod dir="${Linux_package_dirNarrowExchangeRates}/bin" perm="755" includes="**/**" />
+
+		<copy file="${distNarrowExchangeRates}/NarrowExchangeRates.jar" todir="${Linux_package_dirNarrowExchangeRates}/lib" />
+		<copy file="${distNarrowExchangeRates}/NarrowExchangeRates.src.jar" todir="${Linux_package_dirNarrowExchangeRates}/lib" />
+		<copy file="${common_dirNarrowExchangeRates}/icons/NarrowExchangeRates.png" todir="${Linux_package_dirNarrowExchangeRates}/images" />
+
+		<copy file="${common_dirNarrowExchangeRates}/VERSION HISTORY.txt" todir="${Linux_package_dirNarrowExchangeRates}" />
+		<copy file="${common_dirNarrowExchangeRates}/README.txt" todir="${Linux_package_dirNarrowExchangeRates}" />
+		<copy file="${common_dirNarrowExchangeRates}/LICENSE.txt" todir="${Linux_package_dirNarrowExchangeRates}" />
+
+		<echo message="Have to tar manaully, because [ANT Bug 550] the tar task change the mode of the executables files." />
+		<echo message="Linux/Unix version release is finished." />
+	</target>
+
+	<property name="jarbundler_dir" value="/Applications/eclipse/plugins/org.apache.ant_1.8.3.v201301120609/lib" />
+	<target name="mac"
+	        depends="build_jar_all_NarrowExchangeRates_NoJUnitTest"
+	        description="release Mac version of CladeAge">
+		<delete dir="${Mac_package_dirNarrowExchangeRates}" />
+		<delete file="${Mac_dirNarrowExchangeRates}/pack.temp.dmg"/>
+		<delete file="${Mac_dirNarrowExchangeRates}/CladeAge v${versionNarrowExchangeRates}.dmg"/>
+		<!-- Create the release directory -->
+		<mkdir dir="${Mac_package_dirNarrowExchangeRates}" />
+
+		<copy todir="${Mac_package_dirNarrowExchangeRates}/bin">
+			<fileset dir="${Linux_dirNarrowExchangeRates}/bin" />
+		</copy>
+		<chmod dir="${Mac_package_dirNarrowExchangeRates}/bin" perm="755" includes="**/**" />
+
+		<copy file="${distNarrowExchangeRates}/NarrowExchangeRates.jar" todir="${Mac_package_dirNarrowExchangeRates}/lib" />
+		<copy file="${distNarrowExchangeRates}/NarrowExchangeRates.src.jar" todir="${Mac_package_dirNarrowExchangeRates}/lib" />
+
+		<copy file="${common_dirNarrowExchangeRates}/VERSION HISTORY.txt" todir="${Mac_package_dirNarrowExchangeRates}" />
+		<copy file="${common_dirNarrowExchangeRates}/README.txt" todir="${Mac_package_dirNarrowExchangeRates}" />
+		<copy file="${common_dirNarrowExchangeRates}/LICENSE.txt" todir="${Mac_package_dirNarrowExchangeRates}" />
+
+		<taskdef name="jarbundler"
+		         classname="net.sourceforge.jarbundler.JarBundler"
+		         classpath="${jarbundler_dir}/jarbundler-2.2.0.jar" />
+
+		<!-- create a jar bundle for the mac -->
+		<jarbundler dir="${Mac_package_dirNarrowExchangeRates}"
+		            name="${CladeAge_name}"
+		            mainclass="${main_class_CladeAge}"
+		            icon="${common_dirNarrowExchangeRates}/icons/NarrowExchangeRates.icns"
+		            jvmversion="1.8+"
+		            vmoptions="-Xmx1024M"
+		            arguments="-window -working -options"
+		            version="${versionNarrowExchangeRates}"
+		            infostring="${CladeAge_name}, ${copyright}"
+		            bundleid="${main_class_CladeAge}">
+			<jarfileset dir="${Mac_package_dirNarrowExchangeRates}/lib">
+				<include name="**/NarrowExchangeRates.jar" />
+			</jarfileset>
+			<javaproperty name="apple.laf.useScreenMenuBar" value="true" />
+			<javaproperty name="java.library.path" value="$JAVAROOT:/usr/local/lib" />
+		</jarbundler>
+
+		<echo message="Building disk image." />
+		<exec executable='release/Mac/createdmg.sh'/>
+		<echo message="Mac version release is finished." />
+	</target>
+
+
+
+
+</project>

@@ -1,0 +1,5 @@
+<package name='NarrowExchangeRates' version='0.0.1'>
+	<depends on='beast2' atleast='2.6.0'/>
+	<depends on='FastRelaxedClockLogNormal' atleast='0.0.5'/>
+	<depends on='BEASTLabs' atleast='1.9.0'/>
+</package>
