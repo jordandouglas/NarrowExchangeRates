@@ -146,7 +146,7 @@ public class MetaNEROperator  extends TreeOperator {
 	            
 	            // Ensure that the constraints have not been broken
 	            if (!this.validateProposalRates(ta, tb, tc, td, te)) return Double.NEGATIVE_INFINITY;
-	            
+	            break;
 	        	
 	        }
 	        
@@ -162,7 +162,7 @@ public class MetaNEROperator  extends TreeOperator {
 	            
 	            // Ensure that the constraints have not been broken
 	            if (!this.validateProposalQuantiles(ta, tb, tc, td, te)) return Double.NEGATIVE_INFINITY;
-	        	
+	            break;
 	        }
         
         }
@@ -176,23 +176,25 @@ public class MetaNEROperator  extends TreeOperator {
         
         
         // Set the new times + rates/quantiles
-        D.setHeight(this.get_tdp());
+        D.setHeight(this.tdp);
         switch (clockMode) {
 	        case rates: {
 	        	
 	            // Set the new rates
-	        	rates.setValue(A.getNr(), this.get_rap());
-	        	rates.setValue(B.getNr(), this.get_rbp());
-	        	rates.setValue(C.getNr(), this.get_rcp());
-	        	rates.setValue(D.getNr(), this.get_rdp());
+	        	rates.setValue(A.getNr(), this.rap);
+	        	rates.setValue(B.getNr(), this.rbp);
+	        	rates.setValue(C.getNr(), this.rcp);
+	        	rates.setValue(D.getNr(), this.rdp);
+	        	break;
 	        }
 	        case quantiles: {
 	        	
 	        	// Set the new quantiles
-	        	rates.setValue(A.getNr(), this.get_qap());
-	        	rates.setValue(B.getNr(), this.get_qbp());
-	        	rates.setValue(C.getNr(), this.get_qcp());
-	        	rates.setValue(D.getNr(), this.get_qdp());
+	        	rates.setValue(A.getNr(), this.qap);
+	        	rates.setValue(B.getNr(), this.qbp);
+	        	rates.setValue(C.getNr(), this.qcp);
+	        	rates.setValue(D.getNr(), this.qdp);
+	        	break;
 	        	
 	        }
     
@@ -360,49 +362,16 @@ public class MetaNEROperator  extends TreeOperator {
 		
 	}
 	
-	
-	// Get time proposal
-	protected double get_tdp() {
-		return this.tdp;
-	}
-	
-	// Get rate proposals
-	protected double get_rap() {
-		return this.rap;
-	}
-	protected double get_rbp() {
-		return this.rbp;
-	}
-	protected double get_rcp() {
-		return this.rcp;
-	}
-	protected double get_rdp() {
-		return this.rdp;
-	}
-	
-	// Get quantile proposals
-	protected double get_qap() {
-		return this.qap;
-	}
-	protected double get_qbp() {
-		return this.qbp;
-	}
-	protected double get_qcp() {
-		return this.qcp;
-	}
-	protected double get_qdp() {
-		return this.qdp;
-	}
-	
+
 	
 	// Validate proposal for rates
 	protected boolean validateProposalRates(double ta, double tb, double tc, double td, double te) {
 		
-		if (this.get_tdp() > te || this.get_tdp() < tc || this.get_tdp() < tb) return false;
-		if (this.get_rap() <= 0) return false;
-		if (this.get_rbp() <= 0) return false;
-		if (this.get_rcp() <= 0) return false;
-		if (this.get_rdp() <= 0) return false;
+		if (this.tdp > te || this.tdp < tc || this.tdp < tb) return false;
+		if (this.rap <= 0) return false;
+		if (this.rbp <= 0) return false;
+		if (this.rcp <= 0) return false;
+		if (this.rdp <= 0) return false;
 		return true;
 		
 	}
@@ -411,11 +380,11 @@ public class MetaNEROperator  extends TreeOperator {
 	// Validate proposal for quantiles
 	protected boolean validateProposalQuantiles(double ta, double tb, double tc, double td, double te) {
 		
-		if (this.get_tdp() > te || this.get_tdp() < tc || this.get_tdp() < tb) return false;
-		if (this.get_qap() <= 0 || this.get_qap() >= 1) return false;
-		if (this.get_qbp() <= 0 || this.get_qbp() >= 1) return false;
-		if (this.get_qcp() <= 0 || this.get_qcp() >= 1) return false;
-		if (this.get_qdp() <= 0 || this.get_qdp() >= 1) return false;
+		if (this.tdp > te || this.tdp < tc || this.tdp < tb) return false;
+		if (this.qap <= 0 || this.qap >= 1) return false;
+		if (this.qbp <= 0 || this.qbp >= 1) return false;
+		if (this.qcp <= 0 || this.qcp >= 1) return false;
+		if (this.qdp <= 0 || this.qdp >= 1) return false;
 		
 		
 		// Ensure that proposed quantiles are not associated with rates which go outside the rate boundaries
@@ -426,10 +395,10 @@ public class MetaNEROperator  extends TreeOperator {
             
 	            double rmin = piecewise.getRangeMin();
 	            double rmax = piecewise.getRangeMax();
-	            if (this.get_rap() < rmin || this.get_rap() > rmax) return false;
-	            if (this.get_rbp() < rmin || this.get_rbp() > rmax) return false;
-	            if (this.get_rcp() < rmin || this.get_rcp() > rmax) return false;
-	            if (this.get_rdp() < rmin || this.get_rdp() > rmax) return false;
+	            if (this.rap < rmin || this.rap > rmax) return false;
+	            if (this.rbp < rmin || this.rbp > rmax) return false;
+	            if (this.rcp < rmin || this.rcp > rmax) return false;
+	            if (this.rdp < rmin || this.rdp > rmax) return false;
 	            
             } catch (Exception e) {
             	e.printStackTrace();

@@ -191,7 +191,7 @@
 
 
 		<operator id="YuleModelNarrow.t:dummy" spec="Exchange" tree="@Tree.t:calsim" weight="15.0"/>
-		<operator id="NarrowExchangeRates_Null" spec="operators.MetaNEROperator" quantiles="@rates.c:calsim" distr="@ApproxLogNormal" tree="@Tree.t:calsim" rwindowSize="0.5" weight="0.0"/>
+		<operator id="NarrowExchangeRates_Null" spec="operators.MetaNEROperator" quantiles="@rates.c:calsim" distr="@ApproxLogNormal" tree="@Tree.t:calsim" rwindowSize="0.5" weight="15.0"/>
 		<operator id="NarrowExchangeRates_ABCD" spec="NERVariants.NEROperator_ABCDE" quantiles="@rates.c:calsim" distr="@ApproxLogNormal" tree="@Tree.t:calsim" rwindowSize="0.5" weight="15.0"/>
 			
 
