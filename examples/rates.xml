@@ -192,10 +192,57 @@
 		</distribution>
 
 
-		<operator id="YuleModelNarrow.t:dummy" spec="Exchange" tree="@Tree.t:calsim" weight="15.0"/>
-		<operator id="NarrowExchangeRates_Null" spec="operators.MetaNEROperator" rates="@rates.c:calsim" tree="@Tree.t:calsim" rwindowSize="0.5" weight="15.0"/>
-		<operator id="NarrowExchangeRates_ABCD" spec="NERVariants.NEROperator_ABCDE" rates="@rates.c:calsim" tree="@Tree.t:calsim" rwindowSize="0.5" weight="15.0"/>
-			
+		<operator id="YuleModelNarrow.t:dummy" spec="Exchange" tree="@Tree.t:calsim" weight="1.0"/>
+		<operator id="NEROperator_Null" spec="operators.MetaNEROperator" rates="@rates.c:calsim" tree="@Tree.t:calsim" rwindowSize="0.5" weight="1.0"/>
+
+
+		<operator id="NEROperator_dAB_dAC_dAE_dBC_dCE" spec="NERVariants.NEROperator_dAB_dAC_dAE_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAC_dAE_dBC" spec="NERVariants.NEROperator_dAB_dAC_dAE_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAC_dAE_dCE" spec="NERVariants.NEROperator_dAB_dAC_dAE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAC_dAE" spec="NERVariants.NEROperator_dAB_dAC_dAE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAC_dBC_dBE" spec="NERVariants.NEROperator_dAB_dAC_dBC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAC_dBC_dCE" spec="NERVariants.NEROperator_dAB_dAC_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAC_dBC" spec="NERVariants.NEROperator_dAB_dAC_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAC_dBE" spec="NERVariants.NEROperator_dAB_dAC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAC_dCE" spec="NERVariants.NEROperator_dAB_dAC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAC" spec="NERVariants.NEROperator_dAB_dAC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAE_dBC_dCE" spec="NERVariants.NEROperator_dAB_dAE_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAE_dBC" spec="NERVariants.NEROperator_dAB_dAE_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAE_dCE" spec="NERVariants.NEROperator_dAB_dAE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dAE" spec="NERVariants.NEROperator_dAB_dAE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dBC_dBE" spec="NERVariants.NEROperator_dAB_dBC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dBC_dCE" spec="NERVariants.NEROperator_dAB_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dBC" spec="NERVariants.NEROperator_dAB_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dBE_dCE" spec="NERVariants.NEROperator_dAB_dBE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dBE" spec="NERVariants.NEROperator_dAB_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB_dCE" spec="NERVariants.NEROperator_dAB_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAB" spec="NERVariants.NEROperator_dAB" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dAE_dBC_dCE" spec="NERVariants.NEROperator_dAC_dAE_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dAE_dBC" spec="NERVariants.NEROperator_dAC_dAE_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dAE_dBE_dCE" spec="NERVariants.NEROperator_dAC_dAE_dBE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dAE_dBE" spec="NERVariants.NEROperator_dAC_dAE_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dAE_dCE" spec="NERVariants.NEROperator_dAC_dAE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dAE" spec="NERVariants.NEROperator_dAC_dAE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dBC_dBE" spec="NERVariants.NEROperator_dAC_dBC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dBC_dCE" spec="NERVariants.NEROperator_dAC_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dBC" spec="NERVariants.NEROperator_dAC_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dBE_dCE" spec="NERVariants.NEROperator_dAC_dBE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dBE" spec="NERVariants.NEROperator_dAC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC_dCE" spec="NERVariants.NEROperator_dAC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAC" spec="NERVariants.NEROperator_dAC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAE_dBC_dBE" spec="NERVariants.NEROperator_dAE_dBC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAE_dBC_dCE" spec="NERVariants.NEROperator_dAE_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAE_dBC" spec="NERVariants.NEROperator_dAE_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAE_dBE_dCE" spec="NERVariants.NEROperator_dAE_dBE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAE_dBE" spec="NERVariants.NEROperator_dAE_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAE_dCE" spec="NERVariants.NEROperator_dAE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAE" spec="NERVariants.NEROperator_dAE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dBC_dBE" spec="NERVariants.NEROperator_dBC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dBC_dCE" spec="NERVariants.NEROperator_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dBC" spec="NERVariants.NEROperator_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dBE_dCE" spec="NERVariants.NEROperator_dBE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dBE" spec="NERVariants.NEROperator_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dCE" spec="NERVariants.NEROperator_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
 
 
 

@@ -73,7 +73,7 @@ public class MetaNEROperator  extends TreeOperator {
 		
 		
 		// Window size, tree, and sub-operator (use this operator if unspecified)
-		rwindowSize = rwindowSizeInput.get();
+		rwindowSize = rwindowSizeInput.get() == null ? 0 : rwindowSizeInput.get();
 		tree =  treeInput.get();
 		
 	}
