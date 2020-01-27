@@ -265,7 +265,7 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
     protected double getRandomWalkStepSize(double windowSize) {
     	
     	
-    	// Sample random walk step size
+    	// Sample a random walk step size
     	if (proposalKernel != null) return proposalKernel.getRandomDelta(windowSize);
     	
     	// No random walk
@@ -296,12 +296,16 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
 	protected double proposalRates(double rWindowSize, double ta, double tb, double tc, double td, double te, 
 												  double ra, double rb, double rc, double rd) {
 		
-		// Null proposal: keep all times and rates constant
+		
+		double r_td = this.getRandomWalkStepSize(rWindowSize); 
+		
+		
+		// Null proposal: keep all rates constant. Keep tD constant unless a random walk is applied.
 		this.tdp = td;
 		this.rap = ra;
 		this.rbp = rb;
 		this.rcp = rc;
-		this.rdp = rd;
+		this.rdp = rd + r_td;
 		return 0;
 		
 	}
