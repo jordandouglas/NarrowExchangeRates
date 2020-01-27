@@ -6,7 +6,9 @@ import java.util.List;
 import org.apache.commons.math.MathException;
 
 import beast.core.Input;
+import beast.core.Input.Validate;
 import beast.core.parameter.RealParameter;
+import beast.evolution.operators.KernelDistribution;
 import beast.evolution.operators.TreeOperator;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
@@ -15,18 +17,18 @@ import beast.math.distributions.ParametricDistribution;
 import beast.math.distributions.PiecewiseLinearDistribution;
 import beast.util.Randomizer;
 import consoperators.ConsOperatorUtils;
+import consoperators.InConstantDistanceOperator;
 
-public class MetaNEROperator  extends TreeOperator {
+public class MetaNEROperator  extends InConstantDistanceOperator {
 	
 	
-	public final  Input<RealParameter> rateInput = new Input<>("rates", "the rates associated with nodes in the tree for sampling of individual rates among branches.");
-	public final  Input<RealParameter> quantileInput = new Input<>("quantiles", "the quantiles associated with nodes in the tree for sampling of individual rates among branches.",
-						Input.Validate.XOR, rateInput);
+
 	public final  Input<ParametricDistribution> distributionInput = new Input<>("distr", "Rate distribution. Required if using the quantile parameterisation.");
 	
 	
-	public final Input<Double> rwindowSizeInput =
-            new Input<>("rwindowSize", "the size of the window when proposing branch rate for node 'parent'");
+	public final  Input<KernelDistribution> proposalKernelInput = new Input<>("kernel", "Proposal kernel for a random walk on the node height of the B-D branch.");
+	
+
 
 	
     // Time proposal
@@ -49,9 +51,18 @@ public class MetaNEROperator  extends TreeOperator {
     // Inputs
     private ClockMode clockMode;
     private RealParameter rates;
-    private double rwindowSize = 0;
+    private double twindowSize = 0;
     protected ParametricDistribution rateDistribution;
     private Tree tree;
+    protected KernelDistribution proposalKernel;
+    
+    
+    
+    
+    public MetaNEROperator() {
+    	twindowSizeInput.setRule(Validate.OPTIONAL);
+    	clockModelInput.setRule(Validate.FORBIDDEN);
+    }
     
     
 	@Override
@@ -73,8 +84,10 @@ public class MetaNEROperator  extends TreeOperator {
 		
 		
 		// Window size, tree, and sub-operator (use this operator if unspecified)
-		rwindowSize = rwindowSizeInput.get() == null ? 0 : rwindowSizeInput.get();
+		twindowSize = twindowSizeInput.get() == null ? 0 : twindowSizeInput.get();
 		tree =  treeInput.get();
+		
+		proposalKernel = proposalKernelInput.get();
 		
 	}
 
@@ -142,7 +155,7 @@ public class MetaNEROperator  extends TreeOperator {
 	            double rc = rates.getValue(C.getNr()); // Free
 	            double rd = rates.getValue(D.getNr()); // Free
 	            
-	            logJD = this.proposalRates(rwindowSize, ta, tb, tc, td, te, ra, rb, rc, rd);
+	            logJD = this.proposalRates(twindowSize, ta, tb, tc, td, te, ra, rb, rc, rd);
 	            
 	            // Ensure that the constraints have not been broken
 	            if (!this.validateProposalRates(ta, tb, tc, td, te)) return Double.NEGATIVE_INFINITY;
@@ -158,7 +171,7 @@ public class MetaNEROperator  extends TreeOperator {
 	            double qc = rates.getValue(C.getNr()); // Free
 	            double qd = rates.getValue(D.getNr()); // Free
 	            
-	            logJD = this.proposalQuantiles(rwindowSize, ta, tb, tc, td, te, qa, qb, qc, qd);
+	            logJD = this.proposalQuantiles(twindowSize, ta, tb, tc, td, te, qa, qb, qc, qd);
 	            
 	            // Ensure that the constraints have not been broken
 	            if (!this.validateProposalQuantiles(ta, tb, tc, td, te)) return Double.NEGATIVE_INFINITY;
@@ -246,6 +259,20 @@ public class MetaNEROperator  extends TreeOperator {
     	
     }
     
+    
+    
+    // Sample a random walk step size
+    protected double getRandomWalkStepSize(double windowSize) {
+    	
+    	
+    	// Sample random walk step size
+    	if (proposalKernel != null) return proposalKernel.getRandomDelta(windowSize);
+    	
+    	// No random walk
+    	return 0;
+    	
+    	
+    }
     
 	
 	

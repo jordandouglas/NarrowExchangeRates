@@ -111,7 +111,7 @@
 			<parameter id="gammaShape.s:calsim" spec="parameter.RealParameter" name="stateNode">1.0</parameter>
 			<parameter id="kappa.s:calsim" spec="parameter.RealParameter" lower="0.0" name="stateNode">2.0</parameter>
 			<parameter id="ucldStdev.c:calsim" spec="parameter.RealParameter" lower="0.0" name="stateNode">0.1</parameter>
-			<parameter id="rates.c:calsim" spec="parameter.RealParameter" name="stateNode" dimension="199">1.0</parameter>
+			<parameter id="rates.c:calsim" spec="parameter.RealParameter" name="stateNode" dimension="199" lower="0" upper="1">1.0</parameter>
 			<parameter id="birthRate.t:calsim" spec="parameter.RealParameter" name="stateNode">1.0</parameter>
 			<parameter id="freqParameter.s:calsim" spec="parameter.RealParameter" dimension="4" lower="0.0" name="stateNode" upper="1.0">0.25</parameter>
 
@@ -160,11 +160,6 @@
 					</Gamma>
 				</prior>
 
-
-				<prior id="FastRatePriorDistrbution.c:dna" name="distribution" x="@rates.c:calsim">
-					<LogNormal id="LogNormalDistributionModel.rates" S="@ucldStdev.c:calsim" M="1" meanInRealSpace="true" name="distr"/>
-				</prior>
-
 			</distribution>
 
 			<distribution id="likelihood" spec="util.CompoundDistribution" useThreads="true">
@@ -176,10 +171,12 @@
 						</substModel>
 					</siteModel>
 
-					<branchRateModel id="RelaxedClock.c:calsim" spec="beast.evolution.branchratemodel.UCRelaxedClockModel" rates="@rates.c:calsim" tree="@Tree.t:calsim">
-						<LogNormal id="LogNormalDistributionModel.c:calsim" S="@ucldStdev.c:calsim" meanInRealSpace="true" name="distr">
-							<parameter id="RealParameter.9" spec="parameter.RealParameter" estimate="false" lower="0.0" name="M" upper="1.0">1.0</parameter>
-						</LogNormal>
+					<branchRateModel id="RelaxedClock.c:calsim" spec="beast.evolution.branchratemodel.UCRelaxedClockModel" rateQuantiles="@rates.c:calsim" tree="@Tree.t:calsim">
+						<distr id="ApproxLogNormal" spec="beast.math.distributions.PiecewiseLinearDistribution">
+							<LogNormal id="LogNormalDistributionModel.c:calsim" S="@ucldStdev.c:calsim" meanInRealSpace="true" name="distr">
+								<parameter id="RealParameter.9" spec="parameter.RealParameter" estimate="false" lower="0.0" name="M" upper="1.0">1.0</parameter>
+							</LogNormal>
+						</distr>
 						<parameter id="ucldMean.c:calsim" spec="parameter.RealParameter" estimate="false" name="clock.rate">1.0</parameter>
 					</branchRateModel>
 
@@ -192,59 +189,24 @@
 		</distribution>
 
 
+
 		<operator id="YuleModelNarrow.t:dummy" spec="Exchange" tree="@Tree.t:calsim" weight="1.0"/>
-		<operator id="NEROperator_Null" spec="operators.MetaNEROperator" rates="@rates.c:calsim" tree="@Tree.t:calsim" twindowSize="0.5" weight="1.0"/>
+		<operator id="NEROperator_Null" spec="operators.MetaNEROperator" quantiles="@rates.c:calsim" distr="@ApproxLogNormal" tree="@Tree.t:calsim" twindowSize="0.5" weight="1.0"/>
+		
+		
+		<operator id="NEROperator_dAE_nostep" spec="NERVariants.NEROperator_dAE" tree="@Tree.t:calsim" quantiles="@rates.c:calsim" distr="@ApproxLogNormal" twindowSize="0.01" weight="0.5">
+		</operator>
 
+		<operator id="NEROperator_dAE_uniform" spec="NERVariants.NEROperator_dAE" tree="@Tree.t:calsim" quantiles="@rates.c:calsim" distr="@ApproxLogNormal" twindowSize="0.1" weight="0.5">
+			<kernel spec="beast.evolution.operators.KernelDistribution$Bactrian" m="0.95" mode="uniform"/>
+		</operator>
 
-		<operator id="NEROperator_dAB_dAC_dAE_dBC_dCE" spec="NERVariants.NEROperator_dAB_dAC_dAE_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAC_dAE_dBC" spec="NERVariants.NEROperator_dAB_dAC_dAE_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAC_dAE_dCE" spec="NERVariants.NEROperator_dAB_dAC_dAE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAC_dAE" spec="NERVariants.NEROperator_dAB_dAC_dAE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAC_dBC_dBE" spec="NERVariants.NEROperator_dAB_dAC_dBC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAC_dBC_dCE" spec="NERVariants.NEROperator_dAB_dAC_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAC_dBC" spec="NERVariants.NEROperator_dAB_dAC_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAC_dBE" spec="NERVariants.NEROperator_dAB_dAC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAC_dCE" spec="NERVariants.NEROperator_dAB_dAC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAC" spec="NERVariants.NEROperator_dAB_dAC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAE_dBC_dCE" spec="NERVariants.NEROperator_dAB_dAE_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAE_dBC" spec="NERVariants.NEROperator_dAB_dAE_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAE_dCE" spec="NERVariants.NEROperator_dAB_dAE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dAE" spec="NERVariants.NEROperator_dAB_dAE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dBC_dBE" spec="NERVariants.NEROperator_dAB_dBC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dBC_dCE" spec="NERVariants.NEROperator_dAB_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dBC" spec="NERVariants.NEROperator_dAB_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dBE_dCE" spec="NERVariants.NEROperator_dAB_dBE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dBE" spec="NERVariants.NEROperator_dAB_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB_dCE" spec="NERVariants.NEROperator_dAB_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAB" spec="NERVariants.NEROperator_dAB" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dAE_dBC_dCE" spec="NERVariants.NEROperator_dAC_dAE_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dAE_dBC" spec="NERVariants.NEROperator_dAC_dAE_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dAE_dBE_dCE" spec="NERVariants.NEROperator_dAC_dAE_dBE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dAE_dBE" spec="NERVariants.NEROperator_dAC_dAE_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dAE_dCE" spec="NERVariants.NEROperator_dAC_dAE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dAE" spec="NERVariants.NEROperator_dAC_dAE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dBC_dBE" spec="NERVariants.NEROperator_dAC_dBC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dBC_dCE" spec="NERVariants.NEROperator_dAC_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dBC" spec="NERVariants.NEROperator_dAC_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dBE_dCE" spec="NERVariants.NEROperator_dAC_dBE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dBE" spec="NERVariants.NEROperator_dAC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC_dCE" spec="NERVariants.NEROperator_dAC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAC" spec="NERVariants.NEROperator_dAC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAE_dBC_dBE" spec="NERVariants.NEROperator_dAE_dBC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAE_dBC_dCE" spec="NERVariants.NEROperator_dAE_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAE_dBC" spec="NERVariants.NEROperator_dAE_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAE_dBE_dCE" spec="NERVariants.NEROperator_dAE_dBE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAE_dBE" spec="NERVariants.NEROperator_dAE_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAE_dCE" spec="NERVariants.NEROperator_dAE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dAE" spec="NERVariants.NEROperator_dAE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dBC_dBE" spec="NERVariants.NEROperator_dBC_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dBC_dCE" spec="NERVariants.NEROperator_dBC_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dBC" spec="NERVariants.NEROperator_dBC" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dBE_dCE" spec="NERVariants.NEROperator_dBE_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dBE" spec="NERVariants.NEROperator_dBE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
-		<operator id="NEROperator_dCE" spec="NERVariants.NEROperator_dCE" tree="@Tree.t:calsim" rates="@rates.c:calsim" weight="0.5"/>
+		<operator id="NEROperator_dAE_bactrian" spec="NERVariants.NEROperator_dAE" tree="@Tree.t:calsim" quantiles="@rates.c:calsim" distr="@ApproxLogNormal" twindowSize="0.1" weight="0.5">
+			<kernel spec="beast.evolution.operators.KernelDistribution$Bactrian" m="0.95" mode="bactrian_normal"/>
+		</operator>
+	
 
-
+			
 
 
 		<operator id="gammaShapeScaler.s:calsim" spec="ScaleOperator" parameter="@gammaShape.s:calsim" scaleFactor="0.5" weight="0.1"/>
@@ -253,15 +215,16 @@
 			<parameter idref="freqParameter.s:calsim"/>
 		</operator>
 
+	
+
+
+		<operator id="ucldStdevScaler.c:calsim" spec="ScaleOperator" parameter="@ucldStdev.c:calsim" scaleFactor="0.5" weight="3.0"/>
 		
-
-		<operator id="fastUcldStdevScaler.c:calsim" spec="consoperators.UcldScalerOperator" distr="@LogNormalDistributionModel.rates" rates="@rates.c:calsim" scaleFactor="0.5" stdev="@ucldStdev.c:calsim" weight="3.0"/>
-
-
-		<operator id="InternalnodesOperator.c:dna" spec="consoperators.InConstantDistanceOperator" twindowSize="0.02"  tree="@Tree.t:calsim" clockModel="@RelaxedClock.c:calsim" rates="@rates.c:calsim"  weight="10"/>
-		<operator id="RootOperator1.c:dna" spec="consoperators.SimpleDistance" twindowSize="0.02" tree="@Tree.t:calsim" clockModel="@RelaxedClock.c:calsim" rates="@rates.c:calsim"  weight="2.5"/>
-		<operator id="RootOperator2.c:dna" spec="consoperators.SmallPulley" dwindowSize="0.02" tree="@Tree.t:calsim" clockModel="@RelaxedClock.c:calsim" rates="@rates.c:calsim"  weight="2.5"/>
-		<operator id="RootOperator3.c:dna" spec="consoperators.BigPulley" twindowSize="0.02" dwindowSize="0.032" tree="@Tree.t:calsim" rates="@rates.c:calsim"  weight="5.0"/>
+		<operator id="InternalnodesOperator.c:dna" spec="consoperators.InConstantDistanceOperator" twindowSize="0.02"  tree="@Tree.t:calsim" clockModel="@RelaxedClock.c:calsim" quantiles="@rates.c:calsim"  weight="10"/>
+		<operator id="RootOperator1.c:dna" spec="consoperators.SimpleDistance" twindowSize="0.02" tree="@Tree.t:calsim" clockModel="@RelaxedClock.c:calsim" quantiles="@rates.c:calsim"  weight="2.5"/>
+		<operator id="RootOperator2.c:dna" spec="consoperators.SmallPulley" dwindowSize="0.02" tree="@Tree.t:calsim" clockModel="@RelaxedClock.c:calsim" quantiles="@rates.c:calsim"  weight="5"/>
+		<!--<operator id="RootOperator3.c:dna" spec="consoperators.BigPulley" twindowSize="0.02" dwindowSize="0.032" tree="@Tree.t:calsim" clockModel="@RelaxedClock.c:calsim" quantiles="@rates.c:calsim"  weight="5.0"/>-->
+		
 
 		<operator id="RatesRandomWalk.c:calsim" spec="RealRandomWalkOperator" parameter="@rates.c:calsim" weight="5.0" windowSize="1"/>
 		<operator id="RatesSwapOperator.c:calsim" spec="SwapOperator" parameter="@rates.c:calsim" weight="2.5"/>
@@ -273,7 +236,6 @@
 		<operator id="YuleModelTreeRootScaler.t:dummy" spec="ScaleOperator" rootOnly="true" scaleFactor="0.5" tree="@Tree.t:calsim" weight="3.0"/>
 		<operator id="YuleModelUniformOperator.t:dummy" spec="Uniform" tree="@Tree.t:calsim" weight="30.0"/>
 		<operator id="YuleModelSubtreeSlide.t:dummy" spec="SubtreeSlide" tree="@Tree.t:calsim" weight="15.0"/>
-		
 		<operator id="YuleModelWide.t:dummy" spec="Exchange" isNarrow="false" tree="@Tree.t:calsim" weight="3.0"/>
 		<operator id="YuleModelWilsonBalding.t:dummy" spec="WilsonBalding" tree="@Tree.t:calsim" weight="3.0"/>
 
