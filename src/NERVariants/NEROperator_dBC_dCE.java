@@ -14,7 +14,7 @@ public class NEROperator_dBC_dCE extends MetaNEROperator {
 		double r_beta = 0;
 		double r_gamma = 0;
 		double r_delta = 0;
-		double r_epsilon = (Randomizer.nextFloat()-0.5) *2*rWindowSize;
+		double r_epsilon = this.getRandomWalkStepSize(rWindowSize);
 
 
 		// Propose new rates + times
