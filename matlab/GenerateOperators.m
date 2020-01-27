@@ -186,7 +186,7 @@ for n = 1: 1: numDist(2)
             diary searchUnsolvable.txt
             fprintf('%s has a solution\n', setKey); 
             diary off
-            
+            nSolvable = nSolvable + 1;
         end
     end
    
@@ -398,8 +398,7 @@ for i = 1: 1: numMaxSolvable(2)
     outputFnStr = strcat(outputFnStr, sprintf("\t\tdouble r_beta = 0;\n"));
     outputFnStr = strcat(outputFnStr, sprintf("\t\tdouble r_gamma = 0;\n"));
     outputFnStr = strcat(outputFnStr, sprintf("\t\tdouble r_delta = 0;\n"));
-    outputFnStr = strcat(outputFnStr, sprintf("\t\tdouble r_epsilon = (Randomizer.nextFloat()-0.5) *2*rWindowSize;\n\n\n"));
-    
+    outputFnStr = strcat(outputFnStr, sprintf("\t\tdouble r_epsilon = this.getRandomWalkStepSize(rWindowSize);\n\n\n"));
     
     
 
