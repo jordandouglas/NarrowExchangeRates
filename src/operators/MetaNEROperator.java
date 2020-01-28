@@ -18,18 +18,16 @@ import beast.math.distributions.PiecewiseLinearDistribution;
 import beast.util.Randomizer;
 import consoperators.ConsOperatorUtils;
 import consoperators.InConstantDistanceOperator;
+import guiders.NarrowExchangeGuider;
 
 public class MetaNEROperator  extends InConstantDistanceOperator {
 	
 	
 
 	public final  Input<ParametricDistribution> distributionInput = new Input<>("distr", "Rate distribution. Required if using the quantile parameterisation.");
+	public final  Input<NarrowExchangeGuider> guiderInput = new Input<>("guider", "Guiding class for sampling neighbours");
 	
 	
-	public final  Input<KernelDistribution> proposalKernelInput = new Input<>("kernel", "Proposal kernel for a random walk on the node height of the B-D branch.");
-	
-
-
 	
     // Time proposal
     protected double tdp;
@@ -48,6 +46,17 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
     }
     
     
+    // Tree guiding
+    protected enum TreeNeighbours {
+    	left,
+    	right,
+    	stay
+    }
+    TreeNeighbours neighbourOfProposal;
+    double[] neighbourSamplingProbabilitiesBefore;
+    double[] neighbourSamplingProbabilitiesAfter;
+    
+    
     // Inputs
     private ClockMode clockMode;
     private RealParameter rates;
@@ -55,7 +64,7 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
     protected ParametricDistribution rateDistribution;
     private Tree tree;
     protected KernelDistribution proposalKernel;
-    
+    protected NarrowExchangeGuider guider;
     
     
     
@@ -86,8 +95,9 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
 		// Window size, tree, and sub-operator (use this operator if unspecified)
 		twindowSize = twindowSizeInput.get() == null ? 0 : twindowSizeInput.get();
 		tree =  treeInput.get();
-		
+		guider = guiderInput.get();
 		proposalKernel = proposalKernelInput.get();
+		
 		
 	}
 
@@ -104,8 +114,8 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
         // Sample a node E uniformly at random
         int Eindex = Randomizer.nextInt(applicableNodesBeforeOperation.size());
         Node E = applicableNodesBeforeOperation.get(Eindex);
+        
 
-		
 		// Access to the child nodes of E: C and D. D must not be a leaf.
         int nodeDNum = Randomizer.nextInt(2);
         Node D = E.getChild(nodeDNum);
@@ -123,17 +133,44 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
         }
 		
         
-        // Randomly select a child node of D, denoted by B
-        final Node A, B; 
-        boolean BisLeftChild = Randomizer.nextBoolean();
-        if (BisLeftChild){
-        	A = D.getChild(1);
-        	B = D.getChild(0);
+        
+        // Tree guiding. Compute the scores of the trees obtained by:
+        //	1) moving the left child of D
+        //  2) moving the right child of D
+        //  3) not changing anything
+        // And sample one of these three from the scores
+        neighbourOfProposal = this.sampleNeighbour(C, D, E);
+        
+        
+        Node A = null;
+        Node B = null;
+        switch (neighbourOfProposal) {
+        
+	        case stay:{
+	        	
+	        	// If this tree is sampled then perform the constant distance operator instead of NER
+	        	return super.proposal();
+	        }
+	        
+	        case left: {
+	        	
+	        	// Perform narrow exchange on the 1st child of D
+	        	A = D.getChild(1);
+	        	B = D.getChild(0);
+	        	break;
+	        }
+	        
+	        case right: {
+	        	
+	        	// Perform narrow exchange on the 2nd child of D
+	        	A = D.getChild(0);
+	        	B = D.getChild(1);
+	        	break;
+	        }
+	        	
+        
         }
-        else {
-        	A = D.getChild(0);
-        	B = D.getChild(1);
-        }
+        
         
         
         // Get original node times
@@ -228,7 +265,66 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
 	}
 	
 	
-    private void exchangeNodes(Node c1, Node c2, Node p1, Node p2) {
+    private TreeNeighbours sampleNeighbour(Node C, Node D, Node E) {
+    	  
+		neighbourSamplingProbabilitiesBefore = getCumulativeProbabilityVector(C,D,E);
+    	int sample = Randomizer.randomChoice(neighbourSamplingProbabilitiesBefore);
+    	if (sample == 0) return TreeNeighbours.stay;
+    	if (sample == 1) return TreeNeighbours.left; 
+    	return TreeNeighbours.right;
+      
+	}
+    
+    
+    
+    private double[] getCumulativeProbabilityVector(Node C, Node D, Node E) {
+    	
+    	double[] probabilityVector;
+
+    	// No guiding - sample left and right with equal probabilities
+    	if (this.guider == null) {
+    		probabilityVector = new double[] { 0, 0.5, 1.0 };
+    	}else {
+    		
+    		
+    		guider.reset(3);
+    		
+    		
+    		// 1) Calculate the score of the current tree
+    		guider.addNeighbour(tree);
+    		
+    		
+        	// 2) Calculate the score of the tree associated with moving the LEFT branch of D
+    		Node A = D.getChild(1);
+        	Node B = D.getChild(0);
+        	exchangeNodes(A, C, D, E);
+        	guider.addNeighbour(tree);
+        	
+        	// Restore
+        	exchangeNodes(A, C, E, D);
+        	
+        	
+        	// 3) Calculate the score of the tree associated with moving the RIGHT branch of D
+    		A = D.getChild(0);
+        	B = D.getChild(1);
+        	exchangeNodes(A, C, D, E);
+        	guider.addNeighbour(tree);
+        	
+        	// Restore
+        	exchangeNodes(A, C, E, D);
+        	
+        	
+        	// Get the probability vector
+        	probabilityVector = guider.getProbabilityVector();
+        	
+    	}
+    	
+    	return probabilityVector;
+    	
+    }
+
+
+	private void exchangeNodes(Node c1, Node c2, Node p1, Node p2) {
         replace(p1, c1, c2);
         replace(p2, c2, c1);
     }
@@ -394,6 +490,30 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
 	}
 	
 
+	
+    @Override
+    public void optimize(double logAlpha) {
+    	
+    	
+    	// The operator to optimize depends on whether narrow exchange or constant distance was used last
+        switch (neighbourOfProposal) {
+         
+ 	        case stay:{
+ 	        	super.optimize(logAlpha);
+ 	        }
+ 	        
+ 	        default: {
+ 	           double delta = calcDelta(logAlpha);
+ 	           delta += Math.log(twindowSize);
+ 	           twindowSize = Math.exp(delta);
+ 	        }
+         
+         }
+    	
+       
+    }
+	
+	
 	
 	// Validate proposal for rates
 	protected boolean validateProposalRates(double ta, double tb, double tc, double td, double te) {
