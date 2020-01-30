@@ -19,6 +19,9 @@ import beast.util.Randomizer;
 import consoperators.ConsOperatorUtils;
 import consoperators.InConstantDistanceOperator;
 import guiders.NarrowExchangeGuider;
+import starbeast3.GeneTreeForSpeciesTreeDistribution;
+import starbeast3.evolution.speciation.ConstantPopulations;
+import starbeast3.evolution.speciation.PopulationModel;
 
 public class MetaNEROperator  extends InConstantDistanceOperator {
 	
@@ -27,6 +30,13 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
 	public final  Input<ParametricDistribution> distributionInput = new Input<>("distr", "Rate distribution. Required if using the quantile parameterisation.");
 	public final  Input<NarrowExchangeGuider> guiderInput = new Input<>("guider", "Guiding class for sampling neighbours");
 	
+	
+	// Starbeast (optional)
+	final public Input<RealParameter> popSizeInput = new Input<>("popSizes", "the constant population sizes associated with nodes in the tree.");
+    final public Input<List<GeneTreeForSpeciesTreeDistribution>> geneTreeDistributionsInput = new Input<>("gene", "gene tree for species tree distribution for each of the genes", new ArrayList<>());
+    private RealParameter popsizes;
+    private List<GeneTreeForSpeciesTreeDistribution> geneTreeDistributions;
+    private boolean proposeNewPopulationSizes;
 	
 	
     // Time proposal
@@ -97,6 +107,14 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
 		tree =  treeInput.get();
 		guider = guiderInput.get();
 		proposalKernel = proposalKernelInput.get();
+		
+		
+		// Starbeast. Any gene trees? Are population sizes being proposed?
+		geneTreeDistributions = geneTreeDistributionsInput.get();
+        proposeNewPopulationSizes = popSizeInput.get() != null && geneTreeDistributions != null && geneTreeDistributions.size() > 0;
+        if (proposeNewPopulationSizes) {
+        	popsizes = popSizeInput.get();
+        }
 		
 		
 	}
@@ -221,8 +239,110 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
         if (logJD == Double.NEGATIVE_INFINITY) return Double.NEGATIVE_INFINITY;
         
         
+        
+        
+        
+        // Regrafting gene trees? Get the gene nodes which need to move
+        List<List<Node>> nodesToRegraft_original = null;
+        if (geneTreeDistributions != null && geneTreeDistributions.size() > 0) {
+        	nodesToRegraft_original = getGeneNodesToRegraft(A, B, C, D, E);
+        }
+        
+        
+        // Proposing new population sizes? Calculate the contribution to log prior of the current system
+        double partialLogPriorPopulation_A_original = 0;
+        double partialLogPriorPopulation_C_original = 0;
+        double partialLogPriorPopulation_D_original = 0;
+        if (proposeNewPopulationSizes) {
+        	
+        	
+        	
+        	// The A, C, and D branches will be affected 
+        	for (int g = 0; g < geneTreeDistributions.size(); g++) {
+        		partialLogPriorPopulation_A_original += geneTreeDistributions.get(g).calculatePartialLogPBranch(A);
+        		partialLogPriorPopulation_C_original += geneTreeDistributions.get(g).calculatePartialLogPBranch(C);
+        		partialLogPriorPopulation_D_original += geneTreeDistributions.get(g).calculatePartialLogPBranch(D);
+        	}
+        	
+        }
+        
+        
+
         // Rearrange the tree
         exchangeNodes(A, C, D, E);
+        
+        
+        
+        // Regraft gene trees and calculate Hastings ratio
+        double logHastingsRatioGeneTrees = 0;
+        if (geneTreeDistributions != null && geneTreeDistributions.size() > 0) {
+        	logHastingsRatioGeneTrees = regraftGeneTrees(nodesToRegraft_original, A, D);
+        }
+        
+        
+        // Propose new population sizes
+        double logHastingsRatioPopulationSize = 0;
+        if (proposeNewPopulationSizes) {
+        	
+        	
+        	// Recompute population sizes such that their tree partial contribution to the prior remains constant
+        	double partialLogPriorPopulation_A_proposal = 0;
+            double partialLogPriorPopulation_C_proposal = 0;
+            double partialLogPriorPopulation_D_proposal = 0;
+            
+            
+            // The A, C, and D branches have been affected by the proposal
+        	for (int g = 0; g < geneTreeDistributions.size(); g++) {
+        		partialLogPriorPopulation_A_proposal += geneTreeDistributions.get(g).calculatePartialLogPBranch(A);
+        		partialLogPriorPopulation_C_proposal += geneTreeDistributions.get(g).calculatePartialLogPBranch(C);
+        		partialLogPriorPopulation_D_proposal += geneTreeDistributions.get(g).calculatePartialLogPBranch(D);
+        	}
+            
+            
+        	Node X;
+        	double partial_original, partial_proposal, scale, N, Np;
+        	for (int i = 0; i < 3; i ++) {
+        		
+        		// The A branch has become longer and may have more coalescent events. 
+        		if (i == 0) {
+        			X = A;
+        			partial_original = partialLogPriorPopulation_A_original;
+        			partial_proposal = partialLogPriorPopulation_A_proposal;
+        		}
+        	
+        		// The C branch has become shorter and may have fewer coalescent events. 
+        		else if (i == 1) {
+        			X = C;
+        			partial_original = partialLogPriorPopulation_C_original;
+        			partial_proposal = partialLogPriorPopulation_C_proposal;
+        		}
+        		
+        		// The D branch has the same length (unless subjected to a random walk) but different coalescent events. 
+        		else {
+        			X = D;
+        			partial_original = partialLogPriorPopulation_D_original;
+        			partial_proposal = partialLogPriorPopulation_D_proposal;
+        		}
+        		
+        		
+        		// Scale the population size by the ratio between the old and new partial prior contribution
+        		if (partial_original == 0 || partial_proposal == 0) scale = 1;
+        		else scale = partial_proposal / partial_original;
+        		
+        		
+        		N = popsizes.getArrayValue(X.getNr());
+        		Np = N * scale;
+        		popsizes.setValue(X.getNr(), Np);
+        		logHastingsRatioPopulationSize += Math.log(scale);
+        		
+        		
+        	}
+            
+            
+        }
+        
+        
+      
         
         
         // Set the new times + rates/quantiles
@@ -250,6 +370,8 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
     
         }
         
+
+        
         
         // Hastings ratio
         double proposalForward = 0;
@@ -257,15 +379,22 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
         final List<Node> applicableNodesAfterOperation = getApplicableNodes();
     	proposalForward = -Math.log(applicableNodesBeforeOperation.size());
     	proposalBackward = -Math.log(applicableNodesAfterOperation.size());
-        double hastingsRatio =  proposalBackward - proposalForward;
+        double logHastingsRatioExchange = proposalBackward - proposalForward;
 		
-		
-        return hastingsRatio + logJD;
+        
+        
+
+        
+		//return Double.POSITIVE_INFINITY;
+        return logHastingsRatioExchange + logJD + logHastingsRatioGeneTrees + logHastingsRatioPopulationSize;
         
 	}
 	
 	
-    private TreeNeighbours sampleNeighbour(Node C, Node D, Node E) {
+	
+
+
+	private TreeNeighbours sampleNeighbour(Node C, Node D, Node E) {
     	  
 		neighbourSamplingProbabilitiesBefore = getCumulativeProbabilityVector(C,D,E);
     	int sample = Randomizer.randomChoice(neighbourSamplingProbabilitiesBefore);
@@ -324,6 +453,8 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
     }
 
 
+    // p1 becomes the parent of c2 
+    // p2 becomes the parent of c1
 	private void exchangeNodes(Node c1, Node c2, Node p1, Node p2) {
         replace(p1, c1, c2);
         replace(p2, c2, c1);
@@ -518,7 +649,7 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
 	// Validate proposal for rates
 	protected boolean validateProposalRates(double ta, double tb, double tc, double td, double te) {
 		
-		if (this.tdp > te || this.tdp < tc || this.tdp < tb) return false;
+		if (this.tdp > te || this.tdp < tc || this.tdp < tb || this.tdp < ta) return false;
 		if (this.rap <= 0) return false;
 		if (this.rbp <= 0) return false;
 		if (this.rcp <= 0) return false;
@@ -531,7 +662,7 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
 	// Validate proposal for quantiles
 	protected boolean validateProposalQuantiles(double ta, double tb, double tc, double td, double te) {
 		
-		if (this.tdp > te || this.tdp < tc || this.tdp < tb) return false;
+		if (this.tdp > te || this.tdp < tc || this.tdp < tb || this.tdp < ta) return false;
 		if (this.qap <= 0 || this.qap >= 1) return false;
 		if (this.qbp <= 0 || this.qbp >= 1) return false;
 		if (this.qcp <= 0 || this.qcp >= 1) return false;
@@ -563,11 +694,152 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
 	}
 	
 	
+
+
+	// Returns all gene tree branches which must be regrafted
+	private List<List<Node>> getGeneNodesToRegraft(Node A, Node B, Node C, Node D, Node E) {
+		
+		
+		List<List<Node>> nodesToRegraft = new ArrayList<List<Node>>();
+		
+	 	// Find all gene tree nodes that were in species D and need moving
+		for (int g = 0; g < geneTreeDistributions.size(); g++) {
+			
+			
+			List<Node> nodes = new ArrayList<Node>();
+			
+			// Find gene nodes from this gene tree which map to D
+			GeneTreeForSpeciesTreeDistribution geneTree = geneTreeDistributions.get(g);
+			Node[] geneNodeMap_D = geneTree.mapSpeciesNodeToGeneTreeNodes(D);
+			Node[] geneNodeMap_A = geneTree.mapSpeciesNodeToGeneTreeNodes(A);
+			
+			// Get the gene nodes which have exactly 1 child which only have descendents in B
+			for (int i = 0; i < geneNodeMap_D.length; i++) {
+				Node geneNode = geneNodeMap_D[i];
+				if (geneNodeNeedsToMove(geneNode, geneNodeMap_A)) nodes.add(geneNode);
+			}
+			
+			nodesToRegraft.add(nodes);
+			
+			
+		}
+		
+		return nodesToRegraft;
+		
+	}
+
+
+	// Checks whether the gene node needs to be regrafted by checking that 
+	// exactly one child of 'geneNode' has 1 or more descendent in A (and the other has no descendents in A)
+	private boolean geneNodeNeedsToMove(Node geneNode, Node[] geneNodeMap_A) {
+		
+		
+		boolean leftChildHasDescendentsInA = false;
+		boolean rightChildHasDescendentsInA = false;
+		for (int i = 0; i < 2; i ++) {
+			
+			Node child = geneNode.getChild(0);
+			
+			if (i == 0) leftChildHasDescendentsInA = geneSubtreeMapsToSpecies(child, geneNodeMap_A);
+			else rightChildHasDescendentsInA = geneSubtreeMapsToSpecies(child, geneNodeMap_A);
+			
+		}
+		
+		
+		
+		// Return the XOR
+		return (leftChildHasDescendentsInA || rightChildHasDescendentsInA) && !(leftChildHasDescendentsInA && rightChildHasDescendentsInA);
+	}
+
+	
+	// Check whether any of the nodes in this subtree are in the node list
+	private boolean geneSubtreeMapsToSpecies(Node geneSubtree, Node[] geneNodeMap) {
+		
+		
+		
+		// Check if this node is in the list
+		for (int i = 0; i < geneNodeMap.length; i ++) {
+			if (geneNodeMap[i].getNr() == geneSubtree.getNr()) return true;
+		}
+		
+		
+		// Recurse to children
+		for (int c = 0; c < geneSubtree.getChildCount(); c++) {
+			if (geneSubtreeMapsToSpecies(geneSubtree.getChild(c), geneNodeMap)) return true;
+		}
+		
+		
+		return false;
+		
+	}
+	
+	
+	// Sample locations and regraft all of the gene nodes in nodesToRegraft_original
+	// And calculate the hastings ratio
+	// This is called after the exchange has occurred, so node A is now adjacent to node E
+    private double regraftGeneTrees(List<List<Node>> nodesToRegraft, Node A, Node D) {
+    	
+    	double logHR = 0;
+    	for (int g = 0; g < nodesToRegraft.size(); g++) {
+    		
+    		List<Node> nodesToMove_g = nodesToRegraft.get(g);
+    		GeneTreeForSpeciesTreeDistribution geneTree = geneTreeDistributions.get(g);
+    		
+    		Node[] geneNodeMap_A = geneTree.mapSpeciesNodeToGeneTreeNodes(A);
+    		Node[] geneNodeMap_D = geneTree.mapSpeciesNodeToGeneTreeNodes(D);
+    		for (int i = 0; i < nodesToMove_g.size(); i ++) {
+    			
+    			Node nodeToMove = nodesToMove_g.get(i);
+    			
+    			
+    			
+    			
+    			// Find the places the branch can move to (forward)
+    			List<Node> destinationBranches_forward = new ArrayList<Node>();
+    			for (int j = 0; j < geneNodeMap_D.length; j ++) {
+    				Node candidate = geneNodeMap_D[j];
+    				if (candidate.getHeight() < nodeToMove.getHeight() && candidate.getParent().getHeight() > nodeToMove.getHeight()) {
+    					destinationBranches_forward.add(candidate);
+    				}
+    			}
+    			int numberOfDestinations_forward = destinationBranches_forward.size();
+    			
+    			
+    			// Find the [number of] places the branch can move to (reverse)
+    			int numberOfDestinations_reverse = 0;
+    			for (int j = 0; j < geneNodeMap_A.length; j ++) {
+    				Node candidate = geneNodeMap_A[j];
+    				if (candidate.getHeight() < nodeToMove.getHeight() && candidate.getParent().getHeight() > nodeToMove.getHeight()) {
+    					numberOfDestinations_reverse ++;
+    				}
+    			}
+    			
+    			
+    			// Hastings ratio
+    			logHR += Math.log(numberOfDestinations_forward) + Math.log(numberOfDestinations_reverse);
+    			
+    			
+    			// Sample a branch to move to
+    			Node destination = destinationBranches_forward.get(Randomizer.nextInt(numberOfDestinations_forward));
+    			
+    			
+    			// Regraft the branch to its randomly sampled destination
+    			exchangeNodes(nodeToMove, nodeToMove.getParent(), destination, destination.getParent());
+    			
+    			
+    		}
+    		
+    		
+    	}
+    	
+		return logHR;
+	}
+
+	
+	
+	
+	
 }
-
-
-
-
 
 
 
