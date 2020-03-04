@@ -104,7 +104,7 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
 		
 		// Window size, tree, and sub-operator (use this operator if unspecified)
 		twindowSize = twindowSizeInput.get() == null ? 0 : twindowSizeInput.get();
-		tree =  treeInput.get();
+		tree =  treeInput.get(this);
 		guider = guiderInput.get();
 		proposalKernel = proposalKernelInput.get();
 		
@@ -469,6 +469,8 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
     	// Get all internal/root nodes which have grandchildren
     	List<Node> nodes = new ArrayList<Node>();
 
+    	
+    	
         
         // Iterate through all internal nodes
         for (int i = tree.getLeafNodeCount(); i < tree.getNodeCount(); i++) {
@@ -493,7 +495,7 @@ public class MetaNEROperator  extends InConstantDistanceOperator {
     	
     	
     	// Sample a random walk step size
-    	if (proposalKernel != null) return proposalKernel.getRandomDelta(windowSize);
+    	if (proposalKernel != null) return proposalKernel.getRandomDelta(1, windowSize);
     	
     	// No random walk
     	return 0;
